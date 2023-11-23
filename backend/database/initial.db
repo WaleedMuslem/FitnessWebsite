@@ -1,0 +1,71 @@
+CREATE TABLE public.user (
+  userID INT PRIMARY KEY,
+  username VARCHAR(255),
+  password VARCHAR(255),
+  email VARCHAR(255),
+  firstName VARCHAR(255),
+  lastName VARCHAR(255),
+  birthDate DATE
+  -- other user information
+);
+
+CREATE TABLE public.workout (
+  workoutID INT PRIMARY KEY,
+  userID INT,
+  date DATE,
+  duration INT,
+  notes VARCHAR(255),
+  FOREIGN KEY (userID) REFERENCES public.user(userID)
+  -- other workout information
+);
+
+CREATE TABLE public.exercise (
+  exerciseID INT PRIMARY KEY,
+  name VARCHAR(255),
+  description VARCHAR(255),
+  videoURL VARCHAR(255)
+  -- other exercise information
+);
+
+CREATE TABLE public.user_Exercise (
+  userExerciseID INT PRIMARY KEY,
+  userID INT,
+  exerciseID INT,
+  sets INT,
+  repetitions INT,
+  weight DECIMAL,
+  notes VARCHAR(255),
+  date DATE,
+  FOREIGN KEY (userID) REFERENCES public.user(userID),
+  FOREIGN KEY (exerciseID) REFERENCES public.exercise(exerciseID)
+);
+
+CREATE TABLE public.connection (
+  connectionID INT PRIMARY KEY,
+  followerID INT,
+  followingID INT,
+  FOREIGN KEY (followerID) REFERENCES public.user(userID),
+  FOREIGN KEY (followingID) REFERENCES public.user(userID)
+);
+
+CREATE TABLE public.nutrition (
+  nutritionID INT PRIMARY KEY,
+  userID INT,
+  date DATE,
+  meal VARCHAR(255),
+  food VARCHAR(255),
+  calories DECIMAL,
+  FOREIGN KEY (userID) REFERENCES public.user(userID)
+  -- other nutrition information
+);
+
+CREATE table public.goal (
+  goalID INT PRIMARY KEY,
+  userID INT,
+  goalType VARCHAR(255),
+  target VARCHAR(255),
+  currentProgress VARCHAR(255),
+  targetDate DATE,
+  notes VARCHAR(255),
+  FOREIGN KEY (userID) REFERENCES public.user(userID)
+);
