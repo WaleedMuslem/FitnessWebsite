@@ -1,22 +1,47 @@
 const db = require('../../config/db');
 const bcrypt = require('bcrypt')
+const validations = require('../helpers/validations')
+
 
 exports.register = async (req, res) => {
-    // Extract data from the request body
-    const {username, email, password, firstname, lastname, birthdate} = req.body;
+    
+        // Extract data from the request body
+        const { username, email, password, confirm_password, firstname, lastname, birthdate } = req.body;
 
-    // Check if all required fields are present
-    if (!username || !email || !password || !firstname || !lastname || !birthdate) {
-        res.status(400).json({error: 'All fields are required'});
-    }
-    const password_hash = await bcrypt.hashSync(password, 10)
+        const errors = {}
+        validations.validateName(firstname, lastname, errors);
+        validations.validatePassword(password, confirm_password, errors)
+        validations.validateEmail(email, errors)
+        const isEmpty = Object.keys(errors).length === 0;
 
-    await db.transaction(trx => {
-        trx.insert({username: username, email: email, password: password_hash, firstname: firstname, lastname:lastname, birthdate: birthdate})
-            .into('public.user').returning('*')
-            .then((res) => res.send("successfully ..."))
-            .catch(() => res.status(409).json({message: 'something is Wrong ...'}))
-    })
+
+        // Validate email format (add more validation if needed)
+        if (isEmpty) {    
+        // Hash the password
+        const password_hash = await bcrypt.hash(password, 10);
+
+        // Insert user data into the database
+        const insertedUser = await db.transaction(async (trx) => {
+            const [user] = await trx
+                .insert({
+                    username,
+                    password: password_hash,
+                    email,
+                    firstname,
+                    lastname,
+                    birthdate,
+                })
+                .into('user')
+                .returning('*')
+            return user;
+        });
+        res.status(201).json({ message: 'Registration successful', user: insertedUser });
+        }
+           
+        else {
+        res.status(400).json(errors)
+        }
+    
 }
 
 
@@ -24,11 +49,10 @@ exports.register = async (req, res) => {
 exports.getUserById = (req, res) => {
 
     const {userid} = req.params;
-    // res.send("here is the id : "+ userid);
 
     db.select('*')
         .from('user')
-        .where({userid: 0})
+        .where({userid: userid})
         .then((data) => {
             // Return the scholarship data retrieved from the database
             if (data.length === 0) {
